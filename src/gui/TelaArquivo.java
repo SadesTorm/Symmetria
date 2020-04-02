@@ -1,5 +1,6 @@
 package gui;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Font;
@@ -11,7 +12,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
 import java.util.Vector;
 
 import javax.swing.DefaultListModel;
@@ -31,7 +31,6 @@ import javax.swing.border.EmptyBorder;
 
 import modelo.Auxiliar;
 import modelo.Diretorios;
-import servicos.ArquivosDisponiveis;
 import servicos.ManipulacaoDeArquivo;
 import servicos.SalvarArquivos;
 import servicos.VisualizarPdfMultiPaginas;
@@ -39,7 +38,7 @@ import threads.UploadArquivoPdf;
 
 public class TelaArquivo extends JFrame {
 
-	private static JPanel contentPane;
+	public static JPanel contentPane;
 	private JComboBox<String> comboBox;
 	private JTextField txtNomeUsuario;
 	private JPanel jplImagem;
@@ -52,9 +51,9 @@ public class TelaArquivo extends JFrame {
 	private JCheckBox chckbxRpg;
 	private JCheckBox chckbxNutricao;
 	private JCheckBox chckbxPilates;
-	private JProgressBar progressBar;
-	private static JProgressBar progressBar_1;
-	private static JProgressBar progressBar_2;
+
+	public static JProgressBar progressBar_1;
+	public static JProgressBar progressBar_2;
 
 	/**
 	 * Create the frame.
@@ -110,6 +109,29 @@ public class TelaArquivo extends JFrame {
 		jplImagem.add(scrollPane);
 		contentPane.add(jplImagem);
 
+		JFrame jf = new JFrame();
+		jf.setUndecorated(true);
+		jf.setAlwaysOnTop(true);
+		jf.pack();
+		jf.setLocationRelativeTo(null);
+		jf.setSize(400, 30);
+
+		// novo painel para inserir a progress bar
+		JPanel jp = new JPanel(new BorderLayout());
+		JProgressBar jpb = new JProgressBar();
+		jpb.setIndeterminate(true);
+		jpb.setBackground(Color.LIGHT_GRAY);
+		jpb.setForeground(Color.decode("#20b2aa"));
+		jpb.setString("Aguarde por favor...");
+		jpb.setStringPainted(true);
+		jp.add(jpb, BorderLayout.CENTER);
+		jp.setBounds(574, 420, 361, 24);
+		jf.add(jp);
+		jp.setVisible(false);
+		contentPane.add(jp);
+
+		// progressBar_1.setVisible(false);
+
 		JPanel panel = new JPanel();
 		panel.setBounds(544, 225, 398, 445);
 		panel.setLayout(null);
@@ -155,58 +177,74 @@ public class TelaArquivo extends JFrame {
 
 					} else {
 
-						try {
+						Thread pb = new Thread(new Runnable() {
 
-							// new Thread(threadLoad).start(); // progressBar
+							@Override
+							public void run() {
 
-							new ManipulacaoDeArquivo().ApagaArquivosTemp(Diretorios.diretorioTemp);
-							// diretorio passado de onde o arquivo pdf original se encontra "pasta" para ser
-							// transfirmado em jpg
+								jp.setVisible(true);
 
-							Runnable excutaThreadUpload = new UploadArquivoPdf(Diretorios.diretorioArquivos + "\\",
-									nomeArquivo.getNomeArquivoPDF(), Diretorios.diretorioTemp + "\\");
+								try {
 
-							Thread threadUpload = new Thread(excutaThreadUpload);
+									// new Thread(threadLoad).start(); // progressBar
 
-							UpandoArquivoPDF(threadUpload, nomeArquivo.getNomeArquivoPDF());
+									new ManipulacaoDeArquivo().ApagaArquivosTemp(Diretorios.diretorioTemp);
+									// diretorio passado de onde o arquivo pdf original se encontra "pasta" para ser
+									// transfirmado em jpg
 
-							// tempo de espera ate a thread ser liberada
-							while (threadUpload.isAlive()) {
+									Runnable excutaThreadUpload = new UploadArquivoPdf(
+											Diretorios.diretorioArquivos + "\\", nomeArquivo.getNomeArquivoPDF(),
+											Diretorios.diretorioTemp + "\\");
 
-								threadUpload.sleep(500);
+									Thread threadUpload = new Thread(excutaThreadUpload);
 
-							}
+									UpandoArquivoPDF(threadUpload, nomeArquivo.getNomeArquivoPDF());
 
-							@SuppressWarnings("unchecked")
-							DefaultListModel<ImageIcon> listaImagensTemp = new VisualizarPdfMultiPaginas()
-									.VisualizarPdf(Diretorios.diretorioTemp, jplImagem.getWidth(),
-											jplImagem.getHeight());
-							lsm = new JList<>(listaImagensTemp);
-							lsm.addMouseListener(new MouseAdapter() {
+									// tempo de espera ate a thread ser liberada
+									while (threadUpload.isAlive()) {
 
-								@Override
-								public void mouseClicked(MouseEvent e) {
+										threadUpload.sleep(500);
 
-									System.out.println("testandp click da lista " + lsm.getSelectedIndex());
-									// paginaSelecionada = lsm.getSelectedIndex();
+									}
+
+									@SuppressWarnings("unchecked")
+									DefaultListModel<ImageIcon> listaImagensTemp = new VisualizarPdfMultiPaginas()
+											.VisualizarPdf(Diretorios.diretorioTemp, jplImagem.getWidth(),
+													jplImagem.getHeight());
+									lsm = new JList<>(listaImagensTemp);
+									lsm.addMouseListener(new MouseAdapter() {
+
+										@Override
+										public void mouseClicked(MouseEvent e) {
+
+											System.out.println("testandp click da lista " + lsm.getSelectedIndex());
+											// paginaSelecionada = lsm.getSelectedIndex();
+
+										}
+									});
+
+									lsm.setVisibleRowCount(1);
+									jplImagem.removeAll();
+									jplImagem.add(new JScrollPane(lsm));
+									// lblPagTotal.setText("Pag. Total : " + listaImagensTemp.size());
+
+									jplImagem.setVisible(false);
+									jplImagem.setVisible(true);
+
+									jp.setVisible(false);
+
+								} catch (Exception exception) {
+
+									exception.printStackTrace();
 
 								}
-							});
 
-							lsm.setVisibleRowCount(1);
-							jplImagem.removeAll();
-							jplImagem.add(new JScrollPane(lsm));
-							// lblPagTotal.setText("Pag. Total : " + listaImagensTemp.size());
+							}
+						});
 
-							jplImagem.setVisible(false);
-							jplImagem.setVisible(true);
-
-						} catch (Exception exception) {
-
-							exception.printStackTrace();
-
-						}
+						pb.start();
 					}
+
 				} else {
 
 					System.out.println("+++++++++ERRO++++++++++++* " + nomeArquivo.getNomeArquivoPDF());
@@ -269,21 +307,6 @@ public class TelaArquivo extends JFrame {
 				}
 
 				new File(Diretorios.diretorioArquivos + "\\" + nomeArquivo.getNomeArquivoPDF()).delete();
-
-				Vector<String> listaArquivos1;
-				List<String> listaNomeArquivos = new ArquivosDisponiveis()
-						.listaDeArquivos(Diretorios.diretorioArquivos);
-				listaArquivos1 = new Vector<String>(listaNomeArquivos.size());
-				listaArquivos1.add("Selecione um arquivo");
-				int i = 0;
-				while (i < listaNomeArquivos.size()) {
-
-					listaArquivos1.add(listaNomeArquivos.get(i));
-					i++;
-				}
-
-				comboBox = new JComboBox<String>(listaArquivos1);
-				comboBox.repaint();
 
 			}
 		});

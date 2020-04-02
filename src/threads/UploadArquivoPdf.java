@@ -19,7 +19,9 @@ public class UploadArquivoPdf implements Runnable {
 	@Override
 	public void run() {
 		// TODO Auto-generated method stub
+
 		try {
+
 			new ManipulacaoDeArquivo().GenerateImageFromPDF(diretorio, nomeArquivo, "jpg", diretorioImagem);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block

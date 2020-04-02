@@ -1,5 +1,6 @@
 package gui;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
@@ -20,6 +21,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JProgressBar;
 import javax.swing.JTextField;
 import javax.swing.border.LineBorder;
 
@@ -83,9 +85,30 @@ public class TelaArquivoUnico extends JFrame {
 		// painel Para alocar os componente de interação com usuario
 		JPanel panelComponents = new JPanel();
 		panelComponents.setBackground(Color.GRAY);
-		panelComponents.setBounds(531, 404, 471, 276);
+		panelComponents.setBounds(531, 440, 471, 240);
 		contentPane.add(panelComponents);
 		panelComponents.setLayout(null);
+
+		JFrame jf = new JFrame();
+		jf.setUndecorated(true);
+		jf.setAlwaysOnTop(true);
+		jf.pack();
+		jf.setLocationRelativeTo(null);
+		jf.setSize(400, 30);
+
+		// novo painel para inserir a progress bar
+		JPanel jp = new JPanel(new BorderLayout());
+		JProgressBar jpb = new JProgressBar();
+		jpb.setIndeterminate(true);
+		jpb.setBackground(Color.LIGHT_GRAY);
+		jpb.setString("Aguarde por favor...");
+		jpb.setForeground(Color.decode("#20b2aa"));
+		jpb.setStringPainted(true);
+		jp.add(jpb, BorderLayout.CENTER);
+		jp.setBounds(604, 405, 327, 24);
+		jf.add(jp);
+		jp.setVisible(false);
+		contentPane.add(jp);
 
 		JComboBox comboBox = new JComboBox(listaArquivos);
 		comboBox.setBackground(new Color(204, 204, 204));
@@ -169,72 +192,88 @@ public class TelaArquivoUnico extends JFrame {
 
 				} else {
 
-					try {
-						if (Verificacao.verificaArquivoExistente(Diretorios.diretorioServidor, "backup", "")) {
+					Thread pb = new Thread(new Runnable() {
 
-							new SalvarArquivos().doMerge();
+						@Override
+						public void run() {
 
-						} else {
+							jp.setVisible(true);
 
-							PDDocument document = new PDDocument();
+							try {
+								if (Verificacao.verificaArquivoExistente(Diretorios.diretorioServidor, "backup", "")) {
 
-							document.save(Diretorios.diretorioServidor + "\\backup.pdf");
-							System.out.println("PDF created");
-							document.close();
+									new SalvarArquivos().doMerge();
 
-							new SalvarArquivos().doMerge();
+								} else {
 
+									PDDocument document = new PDDocument();
+
+									document.save(Diretorios.diretorioServidor + "\\backup.pdf");
+									System.out.println("PDF created");
+									document.close();
+
+									new SalvarArquivos().doMerge();
+
+								}
+
+							} catch (IOException e4) {
+								// TODO Auto-generated catch block
+								e4.printStackTrace();
+							} catch (DocumentException e4) {
+								// TODO Auto-generated catch block
+								e4.printStackTrace();
+							}
+							// variavel onde controla quantas paginas existem na pasta para ser salvas
+							controlePaginas = 1;
+
+							// chama o metodo salvar arquivo que ainda nao foi finalizado
+							// new SalvarArquivos().salvaArquivosImcompletos(Diretorios.diretorioTempUpload,
+							// Diretorios.diretorioServidor);
+
+							try {
+
+								// carrega arquivo pdf com varias paginas e chama metodo cortar
+								// chama metodo (desfragmentar) onde o mesmo quebra um pdf de varias paginas em
+								// paginas unicas na pasta TepmUpload
+								totalPages = new ManipulacaoDeArquivo().DesfragmentarPdf(Diretorios.diretorioArquivos,
+										nomeArquivo.getNomeArquivoPDF(), Diretorios.diretorioTempUpload);
+
+							} catch (IOException e1) {
+								// TODO Auto-generated catch block
+								e1.printStackTrace();
+							}
+
+							try {
+
+								// transforma sempre o primeiro arquivo PDF em JPG para visualização na
+								// interface
+								new ManipulacaoDeArquivo().GenerateImageFromPDF(Diretorios.getDiretorioTempUpload(),
+										"\\" + Diretorios.arquivoVisualizacaoTemp, "jpg",
+										Diretorios.diretorioTemp + "\\");
+
+								controlePaginas++;
+
+							} catch (IOException e2) {
+								// TODO Auto-generated catch block
+								e2.printStackTrace();
+							}
+							// abaixo setamamos um jlabel tipo image icon para podermos visualizar o arquivo
+							ImageIcon icon = new ImageIcon(Diretorios.diretorioTemp + "\\" + "1.jpg");
+							icon.setImage(
+									icon.getImage().getScaledInstance(lblImagem.getWidth(), lblImagem.getHeight(), 10));
+							lblImagem.setIcon(icon);
+
+							jp.setVisible(false);
 						}
+					});
 
-					} catch (IOException e4) {
-						// TODO Auto-generated catch block
-						e4.printStackTrace();
-					} catch (DocumentException e4) {
-						// TODO Auto-generated catch block
-						e4.printStackTrace();
-					}
-					// variavel onde controla quantas paginas existem na pasta para ser salvas
-					controlePaginas = 1;
+					pb.start();
 
-					// chama o metodo salvar arquivo que ainda nao foi finalizado
-					// new SalvarArquivos().salvaArquivosImcompletos(Diretorios.diretorioTempUpload,
-					// Diretorios.diretorioServidor);
-
-					try {
-
-						// carrega arquivo pdf com varias paginas e chama metodo cortar
-						// chama metodo (desfragmentar) onde o mesmo quebra um pdf de varias paginas em
-						// paginas unicas na pasta TepmUpload
-						totalPages = new ManipulacaoDeArquivo().DesfragmentarPdf(Diretorios.diretorioArquivos,
-								nomeArquivo.getNomeArquivoPDF(), Diretorios.diretorioTempUpload);
-
-					} catch (IOException e1) {
-						// TODO Auto-generated catch block
-						e1.printStackTrace();
-					}
-
-					try {
-
-						// transforma sempre o primeiro arquivo PDF em JPG para visualização na
-						// interface
-						new ManipulacaoDeArquivo().GenerateImageFromPDF(Diretorios.getDiretorioTempUpload(),
-								"\\" + Diretorios.arquivoVisualizacaoTemp, "jpg", Diretorios.diretorioTemp + "\\");
-
-						controlePaginas++;
-
-					} catch (IOException e2) {
-						// TODO Auto-generated catch block
-						e2.printStackTrace();
-					}
-					// abaixo setamamos um jlabel tipo image icon para podermos visualizar o arquivo
-					ImageIcon icon = new ImageIcon(Diretorios.diretorioTemp + "\\" + "1.jpg");
-					icon.setImage(icon.getImage().getScaledInstance(lblImagem.getWidth(), lblImagem.getHeight(), 10));
-					lblImagem.setIcon(icon);
 				}
 
 			}
 		});
-		btnUploadArquivoUnico.setBounds(206, 177, 67, 70);
+		btnUploadArquivoUnico.setBounds(206, 143, 67, 70);
 		btnUploadArquivoUnico.setIcon(iconAdd);
 		panelComponents.add(btnUploadArquivoUnico);
 
@@ -329,7 +368,7 @@ public class TelaArquivoUnico extends JFrame {
 
 			}
 		});
-		btnSalvarArquivoUnico.setBounds(311, 177, 67, 70);
+		btnSalvarArquivoUnico.setBounds(311, 143, 67, 70);
 		btnSalvarArquivoUnico.setIcon(iconSave);
 		panelComponents.add(btnSalvarArquivoUnico);
 
@@ -348,7 +387,7 @@ public class TelaArquivoUnico extends JFrame {
 		btnCancelar.setToolTipText("Cancelar Upload");
 		btnCancelar.setBackground(Color.GRAY);
 		btnCancelar.setBorderPainted(false);
-		btnCancelar.setBounds(95, 177, 67, 70);
+		btnCancelar.setBounds(95, 143, 67, 70);
 		btnCancelar.setIcon(iconCancelar);
 		panelComponents.add(btnCancelar);
 
