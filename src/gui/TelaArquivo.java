@@ -9,7 +9,9 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.Vector;
 
 import javax.swing.DefaultListModel;
@@ -29,6 +31,7 @@ import javax.swing.border.EmptyBorder;
 
 import modelo.Auxiliar;
 import modelo.Diretorios;
+import servicos.ArquivosDisponiveis;
 import servicos.ManipulacaoDeArquivo;
 import servicos.SalvarArquivos;
 import servicos.VisualizarPdfMultiPaginas;
@@ -83,14 +86,6 @@ public class TelaArquivo extends JFrame {
 		panelComponents.setBackground(Color.GRAY);
 		panelComponents.setBounds(544, 520, 398, 160);
 		contentPane.add(panelComponents);
-
-		progressBar_1 = new JProgressBar();
-		progressBar_1.setIndeterminate(true);
-		progressBar_1.setBounds(617, 372, 100, 16);
-
-		progressBar_2 = new JProgressBar();
-		progressBar_2.setIndeterminate(true);
-		progressBar_2.setBounds(794, 372, 100, 16);
 
 		jplImagem = new JPanel();
 		jplImagem.setBorder(null);
@@ -162,7 +157,7 @@ public class TelaArquivo extends JFrame {
 
 						try {
 
-							new Thread(threadLoad).start(); // progressBar
+							// new Thread(threadLoad).start(); // progressBar
 
 							new ManipulacaoDeArquivo().ApagaArquivosTemp(Diretorios.diretorioTemp);
 							// diretorio passado de onde o arquivo pdf original se encontra "pasta" para ser
@@ -172,12 +167,14 @@ public class TelaArquivo extends JFrame {
 									nomeArquivo.getNomeArquivoPDF(), Diretorios.diretorioTemp + "\\");
 
 							Thread threadUpload = new Thread(excutaThreadUpload);
+
 							UpandoArquivoPDF(threadUpload, nomeArquivo.getNomeArquivoPDF());
 
 							// tempo de espera ate a thread ser liberada
 							while (threadUpload.isAlive()) {
 
 								threadUpload.sleep(500);
+
 							}
 
 							@SuppressWarnings("unchecked")
@@ -270,6 +267,24 @@ public class TelaArquivo extends JFrame {
 						e.printStackTrace();
 					}
 				}
+
+				new File(Diretorios.diretorioArquivos + "\\" + nomeArquivo.getNomeArquivoPDF()).delete();
+
+				Vector<String> listaArquivos1;
+				List<String> listaNomeArquivos = new ArquivosDisponiveis()
+						.listaDeArquivos(Diretorios.diretorioArquivos);
+				listaArquivos1 = new Vector<String>(listaNomeArquivos.size());
+				listaArquivos1.add("Selecione um arquivo");
+				int i = 0;
+				while (i < listaNomeArquivos.size()) {
+
+					listaArquivos1.add(listaNomeArquivos.get(i));
+					i++;
+				}
+
+				comboBox = new JComboBox<String>(listaArquivos1);
+				comboBox.repaint();
+
 			}
 		});
 		panelComponents.add(btnSalvarArquivo);
@@ -429,22 +444,6 @@ public class TelaArquivo extends JFrame {
 		System.out.println("-----------loading... " + nomeDoArquivo);
 
 	}
-
-	private static Runnable threadLoad = new Runnable() {
-		public void run() {
-			try {
-
-				contentPane.add(progressBar_1);
-				contentPane.add(progressBar_2);
-
-				contentPane.setComponentZOrder(progressBar_1, 2);
-				contentPane.setComponentZOrder(progressBar_2, 2);
-
-			} catch (Exception e) {
-			}
-
-		}
-	};
 
 	public String VerificaCheck() {
 

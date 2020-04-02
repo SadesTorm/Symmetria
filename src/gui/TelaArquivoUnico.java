@@ -258,79 +258,70 @@ public class TelaArquivoUnico extends JFrame {
 
 					} else {
 
-						if ("Selecione um arquivo" == nomeArquivo.getNomeArquivoPDF()) {
+						// nomeArquivo recebe nome composto so por numeros, numero referencia-se ao
+						// número da pagina
+						nomeArquivo.setNomeArquivoPDF((controlePaginas - 1) + ".pdf");
 
-							JOptionPane.showMessageDialog(null, "Escolha um arquivo para indexar");
+						System.out.println("terceiro arquivo nome referente a ser salvo --------------> "
+								+ nomeArquivo.getNomeArquivoPDF());
+
+						try {
+							// classe que contem metodos para savar os arquivos
+							new SalvarArquivos();
+
+							// salvando arquivo:
+							// txtNomeUsuario -> caixa de texto onde contem nome do arquivo para ser salvo
+							// nomeArquivo -> nome do arquivo temporario (arquivo desfragmentado de origem)
+							// diretorioServidor -> aponta para o servidor onde sera salvo os arquivos
+							// diretorioTemp -> aponta para pasta onde ficara arquivo jpg para visualização
+							// diretorioTempUpload -> aponta para pasta onde fica os arquivos
+							// desfragmentados
+							// prefixoDiretorio -> referente ao prefixo da pasta onde ficara o arquivo a ser
+							// salvo
+							// sufixo -> determina qual sera o tipo do arquivo (regras do cliente)
+
+							SalvarArquivos.salvaPdf(txtNomeUsuario.getText(), nomeArquivo.getNomeArquivoPDF(),
+									Diretorios.diretorioServidor, Diretorios.diretorioTemp,
+									Diretorios.diretorioTempUpload, Diretorios.prefixoDiretorio, VerificaCheck());
+
+						} catch (IOException e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						}
+						// verificaçoes para visualizar a imagem
+						if (!(totalPages - (controlePaginas - 1) == 0)) {
+							try {
+								// feito a conversao do arquivo desfragmentado no formato PDF em formato JPG
+								// para visualização
+								new ManipulacaoDeArquivo().GenerateImageFromPDF(Diretorios.diretorioTempUpload + "\\",
+										controlePaginas + ".pdf", "jpg", Diretorios.diretorioTemp + "\\");
+							} catch (IOException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+
+							controlePaginas++;
+							System.out.println("tamanho recuperado do documento salvo =  " + controlePaginas);
+
+							// abaixo setamamos um jlabel tipo image icon para podermos visualizar o arquivo
+							ImageIcon icon = new ImageIcon(Diretorios.diretorioTemp + "\\1.jpg");
+							icon.setImage(
+									icon.getImage().getScaledInstance(lblImagem.getWidth(), lblImagem.getHeight(), 1));
+							lblImagem.setIcon(icon);
 
 						} else {
-
-							// nomeArquivo recebe nome composto so por numeros, numero referencia-se ao
-							// número da pagina
-							nomeArquivo.setNomeArquivoPDF((controlePaginas - 1) + ".pdf");
-
-							System.out.println("terceiro arquivo nome referente a ser salvo --------------> "
-									+ nomeArquivo.getNomeArquivoPDF());
-
-							try {
-								// classe que contem metodos para savar os arquivos
-								new SalvarArquivos();
-
-								// salvando arquivo:
-								// txtNomeUsuario -> caixa de texto onde contem nome do arquivo para ser salvo
-								// nomeArquivo -> nome do arquivo temporario (arquivo desfragmentado de origem)
-								// diretorioServidor -> aponta para o servidor onde sera salvo os arquivos
-								// diretorioTemp -> aponta para pasta onde ficara arquivo jpg para visualização
-								// diretorioTempUpload -> aponta para pasta onde fica os arquivos
-								// desfragmentados
-								// prefixoDiretorio -> referente ao prefixo da pasta onde ficara o arquivo a ser
-								// salvo
-								// sufixo -> determina qual sera o tipo do arquivo (regras do cliente)
-
-								SalvarArquivos.salvaPdf(txtNomeUsuario.getText(), nomeArquivo.getNomeArquivoPDF(),
-										Diretorios.diretorioServidor, Diretorios.diretorioTemp,
-										Diretorios.diretorioTempUpload, Diretorios.prefixoDiretorio, "_capa");
-
-							} catch (IOException e1) {
-								// TODO Auto-generated catch block
-								e1.printStackTrace();
-							}
-							// verificaçoes para visualizar a imagem
-							if (!(totalPages - (controlePaginas - 1) == 0)) {
-								try {
-									// feito a conversao do arquivo desfragmentado no formato PDF em formato JPG
-									// para visualização
-									new ManipulacaoDeArquivo().GenerateImageFromPDF(
-											Diretorios.diretorioTempUpload + "\\", controlePaginas + ".pdf", "jpg",
-											Diretorios.diretorioTemp + "\\");
-								} catch (IOException e) {
-									// TODO Auto-generated catch block
-									e.printStackTrace();
-								}
-
-								controlePaginas++;
-								System.out.println("tamanho recuperado do documento salvo =  " + controlePaginas);
-
-								// abaixo setamamos um jlabel tipo image icon para podermos visualizar o arquivo
-								ImageIcon icon = new ImageIcon(Diretorios.diretorioTemp + "\\1.jpg");
-								icon.setImage(icon.getImage().getScaledInstance(lblImagem.getWidth(),
-										lblImagem.getHeight(), 1));
-								lblImagem.setIcon(icon);
-
-							} else {
-								// abaixo setamamos um logotipo jlabel tipo image informando que esta sem
-								// arquivo para salvar.
-								ImageIcon icon = new ImageIcon(
-										TelaArquivoUnico.class.getResource("/imagens/fundoLsm.png"));
-								icon.setImage(icon.getImage().getScaledInstance(400, 320, 150));
-								lblImagem.setIcon(icon);
-								System.out.println(
-										"tamanho recuperado do documento imagem inicial =  " + controlePaginas);
-
-							}
+							// abaixo setamamos um logotipo jlabel tipo image informando que esta sem
+							// arquivo para salvar.
+							ImageIcon icon = new ImageIcon(TelaArquivoUnico.class.getResource("/imagens/fundoLsm.png"));
+							icon.setImage(icon.getImage().getScaledInstance(400, 320, 150));
+							lblImagem.setIcon(icon);
+							System.out.println("tamanho recuperado do documento imagem inicial =  " + controlePaginas);
 
 						}
+
 					}
 				}
+
 				txtNomeUsuario.setText("Nome do Arquivo");
 				System.out.println("tesntantd metodo de apagar arquivo ///////////////////////  "
 						+ Diretorios.diretorioTempUpload + "\\" + nomeArquivo.getNomeArquivoPDF());
@@ -344,12 +335,14 @@ public class TelaArquivoUnico extends JFrame {
 
 		JButton btnCancelar = new JButton("");
 		btnCancelar.addActionListener(new ActionListener() {
+
 			public void actionPerformed(ActionEvent arg0) {
 
 				txtNomeUsuario.setText("Nome do Arquivo");
 				comboBox.setSelectedIndex(0);
 				ResetaCheck();
 				lblImagem.setIcon(iconFundo);
+
 			}
 		});
 		btnCancelar.setToolTipText("Cancelar Upload");

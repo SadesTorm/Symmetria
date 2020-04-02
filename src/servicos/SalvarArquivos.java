@@ -102,6 +102,7 @@ public class SalvarArquivos {
 
 		// apaga o arquivo existente para nao ser adicionado no arquivo backup
 		new ManipulacaoDeArquivo().ApagaArquivosTemp(Diretorios.diretorioTempUpload);
+
 	}
 
 	public static void salvaPdf(String nomeUsuario, String nomeArquivo, String diretorioServidor, String diretorioTemp,
